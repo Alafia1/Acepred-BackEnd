@@ -13,14 +13,17 @@ app = FastAPI()
 def root():
     return {"message": "Hello AcePred"}
 
-@app.get("/matches", response_model=List[schemas.Match])
+@app.get("/matches")
 def get_matches(db: Session = Depends(get_db)):
     matches = db.query(models.Match).options(
         selectinload(models.Match.league),
         selectinload(models.Match.home_team),
         selectinload(models.Match.away_team)
         ).all()
-    return matches
+    return {
+        "result": len(matches),
+        "response": matches
+        }
 
 
 @app.get("/teams", response_model=List[schemas.Team])
