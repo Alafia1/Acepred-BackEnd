@@ -18,7 +18,7 @@ def root():
     return {"message": "Hello AcePred"}
 
 @app.get("/matches", response_model=List[schemas.Match])
-def get_matches_on_date(date: date | None = None, league: int | None = None, team: int | None = None, db: Session = Depends(get_db)):
+def get_matches(date: date | None = None, league: int | None = None, team: int | None = None, db: Session = Depends(get_db)):
     if league and team and date:
         target_datetime = datetime.combine(date, datetime.min.time())
         next_datetime = target_datetime + timedelta(days=1)
@@ -107,22 +107,9 @@ def get_matches_on_date(date: date | None = None, league: int | None = None, tea
         ).all()
     return matches
 
-@app.get("/date", response_model=List[schemas.Match])
-def get_matches(date: date, db: Session = Depends(get_db)):
-    target_datetime = datetime.combine(date, datetime.min.time())
-    next_datetime = target_datetime + timedelta(days=1)
-    matches = db.query(models.Match).options(
-        selectinload(models.Match.league),
-        selectinload(models.Match.home_team),
-        selectinload(models.Match.away_team)
-        ).filter(
-        models.Match.datetime >= target_datetime,
-        models.Match.datetime < next_datetime
-        ).all()
-    return matches
 
 @app.get("/matches/{id}", response_model=schemas.Match )
-def get_matches(id: int, db: Session = Depends(get_db)):
+def get_matches_one(id: int, db: Session = Depends(get_db)):
     match = db.query(models.Match).options(
         selectinload(models.Match.league),
         selectinload(models.Match.home_team),
@@ -136,7 +123,7 @@ def get_teams(db: Session = Depends(get_db)):
     return teams
 
 @app.get("/teams/{id}", response_model=schemas.Team)
-def get_teams(id: int, db: Session = Depends(get_db)):
+def get_teams_one(id: int, db: Session = Depends(get_db)):
     teams = db.query(models.Team).filter(models.Team.id == id).first()
     return teams
 
@@ -144,4 +131,37 @@ def get_teams(id: int, db: Session = Depends(get_db)):
 def get_leagues(db: Session = Depends(get_db)):
     leagues = db.query(models.League).all()
     return leagues
-
+ 
+@app.get("/test",)# response_model=List[schemas.League])
+def get_test(db: Session = Depends(get_db)):
+    matches = db.query(models.Match).options(
+        selectinload(models.Match.league),
+        selectinload(models.Match.home_team),
+        selectinload(models.Match.away_team)
+        ).all()
+    print(type(matches))
+    data = {"result": len(matches),
+            "response": []}
+    for match in matches:
+        li = {
+            "id": match.id,
+            "datetime": match.datetime,
+            "status": match.status,
+            "league": {
+                "id": match.league.id,
+                "name": match.league.name,
+                "country": match.league.country
+            },
+            "team":{
+                "home": {
+                    "id": match.home_team.id,
+                    "name": match.home_team.name
+                },
+                "away": {
+                    "id": match.away_team.id,
+                    "name": match.away_team.name
+                }
+            }
+        }
+        data["response"].append(li)
+    return data
