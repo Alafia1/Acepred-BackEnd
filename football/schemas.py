@@ -6,6 +6,8 @@ class League(BaseModel):
     name: str
     country: str
 
+    class Config:
+        orm_mode = True
 
 class Team(BaseModel):
     id: int
@@ -18,8 +20,9 @@ class Match(BaseModel):
     id: int
     datetime: datetime
     status: str
-    league: League
-    home_team_id: Team
-    away_team_id: Team
+    league: League | None = None
+    home_team: Team | None = None
+    away_team: Team | None = None
 
-
+    class Config:
+        orm_mode = True
