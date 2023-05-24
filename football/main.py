@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 from typing import List
 import psycopg2
 from pydantic import BaseModel
-from . import models, schemas
+from . import models, schemas, util
 from .database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -138,13 +138,13 @@ def get_test(db: Session = Depends(get_db)):
         selectinload(models.Match.league),
         selectinload(models.Match.home_team),
         selectinload(models.Match.away_team),
-        selectinload(models.Goals.match_id),
-        selectinload(models.Score.match_id),
         ).all()
     print(type(matches))
     data = {"result": len(matches),
             "response": []}
     for match in matches:
+        goals = db.query(models.Goal).filter(models.Goal.match_id == match.id).first()
+        score = db.query(models.Score).filter(models.Score.match_id == match.id).first()
         li = {
             "id": match.id,
             "datetime": match.datetime,
@@ -157,16 +157,36 @@ def get_test(db: Session = Depends(get_db)):
             "team":{
                 "home": {
                     "id": match.home_team.id,
-                    "name": match.home_team.name
+                    "name": match.home_team.name,
+                    "winner": util.winner(goals.home, goals.away)
                 },
                 "away": {
                     "id": match.away_team.id,
-                    "name": match.away_team.name
+                    "name": match.away_team.name,
+                    "winner": util.winner(goals.away, goals.home)
                 }
             },
             "goals":{
-                "home": match.goals.home,
-                "away": match.goals.away
+                "home": goals.home,
+                "away": goals.away
+            },
+            "score":{
+                "halftime": {
+                    "home": score.home_half,
+                    "away": score.away_half
+                },
+                "fulltime": {
+                    "home": score.home_full,
+                    "away": score.away_full
+                },
+                "extra-time": {
+                    "home": score.home_extra,
+                    "away": score.away_extra
+                },
+                "fulltime": {
+                    "home": score.home_penalties,
+                    "away": score.away_penalties
+                }
             }
         }
         data["response"].append(li)

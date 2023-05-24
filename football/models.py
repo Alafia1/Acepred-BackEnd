@@ -1,6 +1,7 @@
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from .database import Base
+from sqlalchemy.orm import registry
 
 
 class League(Base):
@@ -37,18 +38,19 @@ class Match(Base):
     league = relationship('League', back_populates='matches')
     home_team = relationship('Team', foreign_keys=[home_team_id], back_populates='home_matches')
     away_team = relationship('Team', foreign_keys=[away_team_id], back_populates='away_matches')
-    goals = relationship('Goals', foreign_keys='match_id', back_populates='match')
-    score = relationship('Score', foreign_keys='match_id', back_populates='match')
+    
+    goal = relationship('Goal', back_populates='match')
+    score = relationship('Score', back_populates='match')
 
-class Goals(Base):
-    __tablename__ = "goals"
+class Goal(Base):
+    __tablename__ = "goal"
 
     id = Column(Integer, primary_key=True, index=True, nullable=False)
     match_id  = Column(Integer, ForeignKey('match.id'), nullable=False)
     home = Column(Integer, nullable=True)
     away = Column(Integer, nullable=True)
 
-    match = relationship("Match", foreign_keys=[match_id],back_populates= "goals")
+    match = relationship("Match",back_populates= "goal")
 
 class Score(Base):
     __tablename__ = "score"
@@ -64,4 +66,7 @@ class Score(Base):
     home_penalties = Column(Integer, nullable=True)
     away_penalties = Column(Integer, nullable=True)
 
-    match = relationship("Match", foreign_keys=[match_id],back_populates= "score")
+    match = relationship("Match",back_populates= "score")
+
+mapper_registry = registry()
+mapper_registry.configure()
