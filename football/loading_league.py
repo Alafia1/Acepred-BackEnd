@@ -1,10 +1,11 @@
 import json
 import requests
+from . import secret
 
 url = "https://api-football-v1.p.rapidapi.com/v3/leagues"
 
 headers = {
-	"X-RapidAPI-Key": "5d3b3aa349msh0f493ca2148a1d3p119b60jsn32b53b96c7e6",
+	"X-RapidAPI-Key": secret.KEY,
 	"X-RapidAPI-Host": "api-football-v1.p.rapidapi.com"
 }
 
