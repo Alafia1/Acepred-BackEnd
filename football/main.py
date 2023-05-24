@@ -25,7 +25,7 @@ def get_matches(date: date | None = None, league: int | None = None, team: int |
         matches = db.query(models.Match).options(
         selectinload(models.Match.league),
         selectinload(models.Match.home_team),
-        selectinload(models.Match.away_team)
+        selectinload(models.Match.away_team),
         ).filter(
         models.Match.league_id == league, 
         (models.Match.home_team_id == team) | (models.Match.away_team_id == team),
@@ -137,7 +137,9 @@ def get_test(db: Session = Depends(get_db)):
     matches = db.query(models.Match).options(
         selectinload(models.Match.league),
         selectinload(models.Match.home_team),
-        selectinload(models.Match.away_team)
+        selectinload(models.Match.away_team),
+        selectinload(models.Goals.match_id),
+        selectinload(models.Score.match_id),
         ).all()
     print(type(matches))
     data = {"result": len(matches),
@@ -161,6 +163,10 @@ def get_test(db: Session = Depends(get_db)):
                     "id": match.away_team.id,
                     "name": match.away_team.name
                 }
+            },
+            "goals":{
+                "home": match.goals.home,
+                "away": match.goals.away
             }
         }
         data["response"].append(li)
