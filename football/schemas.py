@@ -1,10 +1,13 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-class League(BaseModel):
+class LeagueCreate(BaseModel):
     id: int
     name: str
     country: str
+
+
+class League(LeagueCreate):
 
     class Config:
         orm_mode = True

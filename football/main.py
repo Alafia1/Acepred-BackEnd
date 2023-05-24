@@ -13,6 +13,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 
+
 @app.get("/")
 def root():
     return {"message": "Hello AcePred"}
@@ -131,7 +132,16 @@ def get_teams_one(id: int, db: Session = Depends(get_db)):
 def get_leagues(db: Session = Depends(get_db)):
     leagues = db.query(models.League).all()
     return leagues
- 
+
+@app.post("/leagues", response_model=schemas.League)
+def post_leagues(league: schemas.LeagueCreate, db: Session = Depends(get_db)):
+    print(league)
+    db_user = models.League(id=league.id, name=league.name, country=league.country)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
 @app.get("/test",)# response_model=List[schemas.League])
 def get_test(db: Session = Depends(get_db)):
     matches = db.query(models.Match).options(
